@@ -43,20 +43,17 @@ local autorunApps = {
 	"picom -b",
 	"pulseaudio -k; sleep 1s; pulseaudio --start",
 	"udiskie &",
-    "python ~/lemonbar/__init__.py"
+	"~/dwm/script/background.py",
+	-- "python ~/lemonbar/__init__.py",
+	"feh --randomize --bg-fill ~/Pictures/wallpaper/",
+    "killall landrop ; landrop &",
 }
 local start_up = function(run, autorun)
 	if run ~= nil and autorun then
-		for app = 1, #run do
-			awful.util.spawn_with_shell(run[app])
+		for i = 1, #run do
+			awful.util.spawn_with_shell(run[i])
 		end
 	end
-	naughty.notify({
-		timeout = 1,
-		preset = naughty.config.presets.normal,
-		title = "autostart",
-		text = "autostart finish",
-	})
 end
 start_up(autorunApps, true)
 -- {{{ Error handling
@@ -98,7 +95,7 @@ beautiful.font = "ComicMono NF 12"
 -- outer gaps
 beautiful.useless_gap = 3
 -- This is used later as the default terminal and editor to run.
-terminal = "alacritty"
+terminal = "kitty"
 editor = os.getenv("EDITOR") or "nvim"
 editor_cmd = terminal .. " -e " .. editor
 
@@ -112,11 +109,11 @@ modkey = "Mod4"
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
 	awful.layout.suit.tile,
+	awful.layout.suit.fair,
 	awful.layout.suit.floating,
 	-- awful.layout.suit.tile.left,
 	awful.layout.suit.tile.bottom,
 	-- awful.layout.suit.tile.top,
-	awful.layout.suit.fair,
 	-- awful.layout.suit.fair.horizontal,
 	-- awful.layout.suit.spiral,
 	-- awful.layout.suit.spiral.dwindle,
@@ -190,8 +187,19 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 -- end
 -- local widgets = require("awe_widgets")
 -- local weather = vicious.register(wibox.widget.textbox(), vicious.widgets.weather, "<span foreground='#ff0000'>Wea:${weather} ${city}</span> ", 5, {"ZSSS"})
-local net = vicious.register(wibox.widget.textbox(), vicious.widgets.net, "<span foreground='#ff0000'>Down:${wlp3s0 down_mb}Mb/s Up:${wlp3s0 up_mb}Mb/s</span> ", 1)
-local volume = vicious.register(wibox.widget.textbox(), vicious.widgets.volume, "<span foreground='#ff0000'>Vol:$1 $2</span> ", 0.5, {"Master"})
+local net = vicious.register(
+	wibox.widget.textbox(),
+	vicious.widgets.net,
+	"<span foreground='#ff0000'>Down:${wlp3s0 down_mb}Mb/s Up:${wlp3s0 up_mb}Mb/s</span> ",
+	1
+)
+local volume = vicious.register(
+	wibox.widget.textbox(),
+	vicious.widgets.volume,
+	"<span foreground='#ff0000'>Vol:$1 $2</span> ",
+	0.5,
+	{ "Master" }
+)
 local mem_usage =
 	vicious.register(wibox.widget.textbox(), vicious.widgets.mem, "<span foreground='#ff0000'>MEM:$1% </span>", 2)
 local cpu_usage =
@@ -242,37 +250,37 @@ local tasklist_buttons = gears.table.join(
 
 local function set_wallpaper(s)
 	-- Wallpaper
-	if beautiful.wallpaper then
-		local wallpaper = beautiful.wallpaper
-		-- If wallpaper is a function, call it with the screen
-		if type(wallpaper) == "function" then
-			wallpaper = wallpaper(s)
-		end
-		gears.wallpaper.maximized(wallpaper, s, true)
-	end
+	-- if beautiful.wallpaper then
+	-- 	local wallpaper = beautiful.wallpaper
+	-- 	-- If wallpaper is a function, call it with the screen
+	-- 	if type(wallpaper) == "function" then
+	-- 		wallpaper = wallpaper(s)
+	-- 	end
+	-- 	gears.wallpaper.maximized(wallpaper, s, true)
+	-- end
 end
 
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
 screen.connect_signal("property::geometry", set_wallpaper)
 
 awful.screen.connect_for_each_screen(function(s)
-    -- local conky = awful.wibar({
-    --     stretch = true,
-    --     width = 100,
-    --     height = 300,
-    --     positon = "left",
-    --     border_width = 3,
-    --     border_color = "#FF00FF",
-    --     ontop = "true",
-    --     visible = conky_enbale,
-    --     opacity = 0.8,
-    --     type = "dock",
-    --     screen = s,
-    --     -- drawable = conky_drawable,
-    --     -- widget = conky_widget,
-    -- })
+	-- local conky = awful.wibar({
+	--     stretch = true,
+	--     width = 100,
+	--     height = 300,
+	--     positon = "left",
+	--     border_width = 3,
+	--     border_color = "#FF00FF",
+	--     ontop = "true",
+	--     visible = conky_enbale,
+	--     opacity = 0.8,
+	--     type = "dock",
+	--     screen = s,
+	--     -- drawable = conky_drawable,
+	--     -- widget = conky_widget,
+	-- })
 	-- Wallpaper
-	set_wallpaper(s)
+	-- set_wallpaper(s)
 
 	-- Each screen has its own tag table.
 	awful.tag({ "1", "2", "3", "4", "5" }, s, awful.layout.layouts[1])
@@ -302,7 +310,6 @@ awful.screen.connect_for_each_screen(function(s)
 		filter = awful.widget.taglist.filter.all,
 		buttons = taglist_buttons,
 	})
-
 	-- Create a tasklist widget
 	s.mytasklist = awful.widget.tasklist({
 		screen = s,
@@ -314,33 +321,35 @@ awful.screen.connect_for_each_screen(function(s)
 	-- s.mywibox = awful.wibar({ position = "top", screen = s })
 	--
 	-- Create the wibox with transparency
-	s.mywibox = awful.wibar({ position = "top", screen = s, bg = beautiful.bg_normal .. "11" })
---
--- 	-- Add widgets to the wibox
--- 	s.mywibox:setup({
--- 		layout = wibox.layout.align.horizontal,
--- 		{ -- Left widgets
--- 			layout = wibox.layout.fixed.horizontal,
--- 			-- mylauncher,
--- 			s.mytaglist,
--- 			s.mylayoutbox,
--- 			s.mypromptbox,
--- 		},
--- 		s.mytasklist, -- Middle widget
--- 		{ -- Right widgets
--- 			layout = wibox.layout.fixed.horizontal,
--- 			wibox.widget.systray(),
---             -- weather,
---             net,
---             volume,
--- 			mem_usage,
--- 			cpu_usage,
--- 			mytextclock,
--- 		},
--- 	})
+	s.mywibox_top = awful.wibar({ position = "top", screen = s, bg = beautiful.bg_normal .. "11" })
+	s.mywibox_bot = awful.wibar({ position = "bottom", screen = s, bg = beautiful.bg_normal .. "11" })
+	-- Add widgets to the wibox
+	s.mywibox_top:setup({
+		layout = wibox.layout.align.horizontal,
+		{ -- Left widgets
+			layout = wibox.layout.fixed.horizontal,
+			-- mylauncher,
+            wibox.widget.systray(),
+			s.mypromptbox,
+		},
+		{ -- Right widgets
+			layout = wibox.layout.fixed.horizontal,
+			-- weather,
+			net,
+			volume,
+			mem_usage,
+			cpu_usage,
+			mytextclock,
+		},
+	})
+	s.mywibox_bot:setup({
+		layout = wibox.layout.fixed.horizontal,
+		s.mytaglist,
+		s.mylayoutbox,
+        s.mytasklist,
+	})
 end)
 -- }}}
-
 -- {{{ Mouse bindings
 root.buttons(gears.table.join(
 	awful.button({}, 3, function()
@@ -407,14 +416,14 @@ globalkeys = gears.table.join(
 	awful.key({}, "#122", function()
 		awful.util.spawn("amixer sset Master 5%-")
 		notice("volume", get_current_volume())
-	end, {description = "Mute", tag = "custom"}),
+	end, { description = "Mute", tag = "custom" }),
 	awful.key({}, "#123", function()
 		awful.util.spawn("amixer sset Master 5%+")
 		notice("volume", get_current_volume())
-	end, {description = "Mute", tag = "custom"}),
-    awful.key({}, "#121", function ()
-        awful.util.spawn("amixer sset Master toggle")
-    end, {description = "Mute", tag = "custom"}),
+	end, { description = "Mute", tag = "custom" }),
+	awful.key({}, "#121", function()
+		awful.util.spawn("amixer sset Master toggle")
+	end, { description = "Mute", tag = "custom" }),
 	awful.key({}, "#67", function()
 		awful.util.spawn("light -U 5")
 		notice("light", get_current_light())
